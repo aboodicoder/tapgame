@@ -62,9 +62,21 @@
     const LS_USERS = "tap_users";
     const LS_SESSION = "tap_session";
 
-    function loadUsers(){ return JSON.parse(localStorage.getItem(LS_USERS) || "{}"); }
-    function saveUsers(users){ localStorage.setItem(LS_USERS, JSON.stringify(users)); }
-    function setSession(sess){ localStorage.setItem(LS_SESSION, JSON.stringify(sess)); }
+    function loadUsers(){
+      try {
+        return JSON.parse(localStorage.getItem(LS_USERS) || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function saveUsers(users){
+      localStorage.setItem(LS_USERS, JSON.stringify(users));
+    }
+
+    function setSession(sess){
+      localStorage.setItem(LS_SESSION, JSON.stringify(sess));
+    }
 
     const suUser = document.getElementById("suUser");
     const suPass = document.getElementById("suPass");
@@ -76,10 +88,23 @@
     const loginBtn = document.getElementById("loginBtn");
     const liMsg = document.getElementById("liMsg");
 
+    console.log("auth.js loaded");
+
+    // Check localStorage availability
+    try {
+      localStorage.setItem("__test__", "1");
+      localStorage.removeItem("__test__");
+    } catch (e) {
+      suMsg.className = "msg bad";
+      suMsg.textContent = "Storage blocked in this browser. Signup won't work.";
+    }
+
     suPass.addEventListener("keydown", (e) => { if (e.key === "Enter") signupBtn.click(); });
     liPass.addEventListener("keydown", (e) => { if (e.key === "Enter") loginBtn.click(); });
 
-    signupBtn.addEventListener("click", () => {
+    signupBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
       const username = suUser.value.trim();
       const password = suPass.value;
 
@@ -111,7 +136,9 @@
       setTimeout(() => location.href = "index.html", 400);
     });
 
-    loginBtn.addEventListener("click", () => {
+    loginBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
       const username = liUser.value.trim();
       const password = liPass.value;
 
