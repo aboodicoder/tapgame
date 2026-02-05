@@ -3,32 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tap Tap</title>
+  <title>Tap Leaderboard</title>
+
   <style>
     *{ box-sizing:border-box; }
-    body{ margin:0; font-family:system-ui, Arial; height:100vh; background:#fafafa; color:#111; }
+
+    :root{
+      --bg:#fafafa;
+      --card:#ffffff;
+      --text:#111;
+      --border:#eee;
+      --hover:#f3f3f3;
+      --shadow: rgba(0,0,0,.07);
+      --toast:#111;
+      --toastText:#fff;
+      --mask: var(--bg);
+    }
+    body.dark{
+      --bg:#0f1115;
+      --card:#161a22;
+      --text:#f2f4f8;
+      --border:#2a3040;
+      --hover:#232a38;
+      --shadow: rgba(0,0,0,.22);
+      --toast:#0b0d12;
+      --toastText:#f2f4f8;
+      --mask: var(--bg);
+    }
+
+    body{ margin:0; font-family:system-ui, Arial; height:100vh; background:var(--bg); color:var(--text); }
 
     header{
       position:fixed; top:0; left:0; right:0;
       display:flex; align-items:center; justify-content:space-between;
-      padding:12px 16px; background:#fff; border-bottom:1px solid #eee;
+      padding:12px 16px; background:var(--card); border-bottom:1px solid var(--border);
       z-index:10;
     }
-    .brand{ font-weight:900; }
-    nav{ display:flex; gap:10px; align-items:center; }
-    nav a{ text-decoration:none; color:#111; padding:6px 10px; border-radius:10px; }
-    nav a:hover{ background:#f3f3f3; }
-    .pill{ font-size:12px; opacity:.75; }
+    .brand{ font-weight:800; }
+    nav{ display:flex; gap:12px; align-items:center; }
+    nav a{ text-decoration:none; color:var(--text); padding:6px 10px; border-radius:10px; }
+    nav a:hover{ background:var(--hover); }
+    .pill{ font-size:12px; opacity:.7; }
+
+    .themeToggle{
+      display:flex; align-items:center; gap:8px;
+      font-size:12px; opacity:.85; user-select:none;
+    }
+    .switch{
+      width:44px; height:24px; border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--card);
+      position:relative; cursor:pointer;
+    }
+    .knob{
+      width:18px; height:18px; border-radius:999px;
+      background:var(--text);
+      position:absolute; top:50%; left:3px; transform:translateY(-50%);
+      transition:left .18s ease;
+    }
+    body.dark .knob{ left:23px; }
 
     main{
       height:100vh;
-      display:grid;
-      place-items:center;
+      display:grid; place-items:center;
       padding-top:54px;
-      user-select:none;
-      cursor:pointer;
-      position:relative;
-      overflow:hidden;
+      user-select:none; cursor:pointer;
+      position:relative; overflow:hidden;
     }
     main.blocked{ cursor:not-allowed; }
 
@@ -36,30 +76,23 @@
       position:relative;
       text-align:center;
       padding:24px;
-      border:1px solid #eee;
+      border:1px solid var(--border);
       border-radius:18px;
-      box-shadow:0 10px 30px rgba(0,0,0,.07);
+      box-shadow:0 10px 30px var(--shadow);
       max-width:520px;
       width:calc(100% - 48px);
-      background:#fff;
+      background:var(--card);
       z-index:5;
     }
-    .name{ font-size:22px; font-weight:900; margin-top:4px; }
+    .name{ font-size:22px; font-weight:800; margin-top:4px; }
 
     .countWrap{
       position:relative;
       margin:14px auto 8px;
-      width:280px;
-      height:160px;
-      display:grid;
-      place-items:center;
+      width:280px; height:160px;
+      display:grid; place-items:center;
     }
-    .count{
-      font-size:72px;
-      font-weight:950;
-      margin:0;
-      line-height:1;
-    }
+    .count{ font-size:72px; font-weight:950; margin:0; line-height:1; }
     .hint{ opacity:.7; margin-top:10px; }
 
     /* WARNING */
@@ -80,10 +113,10 @@
       z-index:50;
       display:none;
     }
-    .warning.show{ display:block; animation: pop .18s ease-out; }
-    @keyframes pop {
-      from{ transform: translateX(-50%) scale(.92); opacity:.2 }
-      to{ transform: translateX(-50%) scale(1); opacity:1 }
+    .warning.show{ display:block; animation:pop .18s ease-out; }
+    @keyframes pop{
+      from{ transform:translateX(-50%) scale(.92); opacity:.2 }
+      to{ transform:translateX(-50%) scale(1); opacity:1 }
     }
 
     .duckInstruction{
@@ -96,13 +129,15 @@
       font-weight:950;
       font-size:15px;
       background:rgba(255,255,255,.97);
-      border:1px solid #eee;
+      border:1px solid var(--border);
       border-radius:999px;
       padding:8px 12px;
       box-shadow:0 8px 20px rgba(0,0,0,.10);
       white-space:nowrap;
       text-align:center;
+      color:#111;
     }
+    body.dark .duckInstruction{ background:rgba(22,26,34,.98); color:var(--text); }
     .duckInstruction.show{ display:block; }
 
     /* Pet countdown badge */
@@ -116,23 +151,25 @@
       font-weight:900;
       font-size:13px;
       background:rgba(255,255,255,.97);
-      border:1px solid #eee;
+      border:1px solid var(--border);
       border-radius:999px;
       padding:8px 12px;
       box-shadow:0 8px 20px rgba(0,0,0,.10);
       white-space:nowrap;
+      color:#111;
     }
+    body.dark .petBadge{ background:rgba(22,26,34,.98); color:var(--text); }
     .petBadge.show{ display:block; }
 
-    /* Shake the score box */
-    .shake{ animation: shake 240ms ease-in-out; }
+    /* Shake */
+    .shake{ animation:shake 240ms ease-in-out; }
     @keyframes shake{
-      0% { transform: translateX(0) }
-      20%{ transform: translateX(-6px) }
-      40%{ transform: translateX(6px) }
-      60%{ transform: translateX(-5px) }
-      80%{ transform: translateX(5px) }
-      100%{ transform: translateX(0) }
+      0%{ transform:translateX(0) }
+      20%{ transform:translateX(-6px) }
+      40%{ transform:translateX(6px) }
+      60%{ transform:translateX(-5px) }
+      80%{ transform:translateX(5px) }
+      100%{ transform:translateX(0) }
     }
 
     /* Layer for roaming critters (goose) */
@@ -156,91 +193,154 @@
     .duck .body{
       display:inline-block;
       font-size:44px;
-      filter: drop-shadow(0 10px 14px rgba(0,0,0,.15));
+      filter:drop-shadow(0 10px 14px rgba(0,0,0,.15));
       line-height:1;
     }
+    .duck .legs{ display:none; } /* no black legs */
 
-    /* remove black legs completely */
-    .duck .legs{ display:none; }
+    /* Hug spots */
+    .hug1{ top:18px; left:8px; transform:rotate(-10deg); }
+    .hug2{ top:10px; right:10px; transform:rotate(12deg); }
+    .hug3{ bottom:10px; left:18px; transform:rotate(10deg); }
+    .hug4{ bottom:8px; right:18px; transform:rotate(-8deg); }
+    .hug5{ top:52px; left:-6px; transform:rotate(-2deg); }
 
-    /* Hugging spots */
-    .hug1{ top: 18px; left: 8px; transform: rotate(-10deg); }
-    .hug2{ top: 10px; right: 10px; transform: rotate(12deg); }
-    .hug3{ bottom: 10px; left: 18px; transform: rotate(10deg); }
-    .hug4{ bottom: 8px; right: 18px; transform: rotate(-8deg); }
-    .hug5{ top: 52px; left: -6px; transform: rotate(-2deg); }
-
-    /* Walking in animation */
-    .walking{ animation: walkIn 950ms ease-out forwards; }
+    .walking{ animation:walkIn 950ms ease-out forwards; }
     @keyframes walkIn{
-      0%   { transform: translate(var(--fromX), var(--fromY)) scale(.95); opacity: .8; }
-      100% { transform: translate(0,0) scale(1); opacity: 1; }
+      0%{ transform:translate(var(--fromX), var(--fromY)) scale(.95); opacity:.8; }
+      100%{ transform:translate(0,0) scale(1); opacity:1; }
     }
 
-    /* Walk away */
-    .leaving{ animation: walkAway 900ms ease-in forwards; }
+    .leaving{ animation:walkAway 900ms ease-in forwards; }
     @keyframes walkAway{
-      0%   { opacity: 1; transform: translate(0,0) scale(1); }
-      70%  { opacity: 1; transform: translate(90px,-40px) scale(.95); }
-      100% { opacity: 0; transform: translate(160px,-90px) scale(.85); }
+      0%{ opacity:1; transform:translate(0,0) scale(1); }
+      70%{ opacity:1; transform:translate(90px,-40px) scale(.95); }
+      100%{ opacity:0; transform:translate(160px,-90px) scale(.85); }
     }
 
-    /* Tiny toast */
+    /* Toast */
     .toast{
       position:fixed; bottom:14px; left:50%; transform:translateX(-50%);
-      background:#111; color:#fff; padding:10px 14px; border-radius:999px;
+      background:var(--toast); color:var(--toastText);
+      padding:10px 14px; border-radius:999px;
       font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s;
       z-index:60;
     }
     .toast.show{ opacity:1; }
 
-    /* Golden goose */
+    /* Golden pet goose */
     .goose .body{ font-size:46px; }
-    .golden .body{ text-shadow: 0 0 14px rgba(255, 200, 0, .9); }
-
-    .roaming{ animation: roam 1400ms linear infinite; }
+    .golden .body{ text-shadow:0 0 14px rgba(255,200,0,.9); }
+    .roaming{ animation:roam 1400ms linear infinite; }
     @keyframes roam{
-      0%   { transform: translate(0,0) }
-      25%  { transform: translate(120px,-40px) }
-      50%  { transform: translate(40px,120px) }
-      75%  { transform: translate(-110px,30px) }
-      100% { transform: translate(0,0) }
+      0%{ transform:translate(0,0) }
+      25%{ transform:translate(120px,-40px) }
+      50%{ transform:translate(40px,120px) }
+      75%{ transform:translate(-110px,30px) }
+      100%{ transform:translate(0,0) }
     }
-
-    .pet{ animation: petBounce 700ms ease-in-out infinite; }
+    .pet{ animation:petBounce 700ms ease-in-out infinite; }
     @keyframes petBounce{
-      0%,100% { transform: translate(0,0) scale(1) }
-      50%     { transform: translate(0,-8px) scale(1.03) }
+      0%,100%{ transform:translate(0,0) scale(1) }
+      50%{ transform:translate(0,-8px) scale(1.03) }
     }
 
-    /* Aggressive red duck */
+    /* Red duck */
     .madDuck .body{
-      text-shadow: 0 0 14px rgba(255,0,0,.65);
-      filter: drop-shadow(0 12px 16px rgba(255,0,0,.18));
+      text-shadow:0 0 14px rgba(255,0,0,.65);
+      filter:drop-shadow(0 12px 16px rgba(255,0,0,.18));
     }
-    .lazyWalk{ animation: lazyIn 1800ms ease-out forwards; }
+    .lazyWalk{ animation:lazyIn 1800ms ease-out forwards; }
     @keyframes lazyIn{
-      0%   { transform: translate(var(--fromX), var(--fromY)) scale(.96); opacity:.85; }
-      100% { transform: translate(0,0) scale(1); opacity:1; }
+      0%{ transform:translate(var(--fromX), var(--fromY)) scale(.96); opacity:.85; }
+      100%{ transform:translate(0,0) scale(1); opacity:1; }
+    }
+
+    /* ---- CANADA GOOSE BOSS ---- */
+    .boss{
+      position:absolute;
+      z-index:45;
+      pointer-events:auto;
+      cursor:pointer;
+      user-select:none;
+      display:grid;
+      place-items:center;
+      gap:6px;
+    }
+    .bossBody{
+      width:170px;
+      height:auto;
+      filter: drop-shadow(0 16px 18px rgba(0,0,0,.22));
+      display:block;
+      pointer-events:none;
+    }
+    /* mask to hide the "extra leg" area (best effort) */
+    .bossMask{
+      position:relative;
+      display:inline-block;
+    }
+    .bossMask::after{
+      content:"";
+      position:absolute;
+      left:42%;
+      bottom:0;
+      width:46px;
+      height:38px;
+      background:var(--mask);
+      border-radius:16px;
+      opacity:1;
+    }
+
+    .bossBar{
+      width:190px; height:12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.10);
+      overflow:hidden;
+    }
+    .bossFill{ height:100%; width:100%; background:#3b82f6; }
+    .bossLabel{
+      font-size:12px;
+      font-weight:900;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.92);
+      border:1px solid var(--border);
+      color:#111;
+    }
+    body.dark .bossLabel{ background:rgba(22,26,34,.95); color:var(--text); }
+    .peck{ animation:peck .20s ease-in-out 1; }
+    @keyframes peck{
+      0%{ transform:translateY(0) }
+      50%{ transform:translateY(6px) }
+      100%{ transform:translateY(0) }
     }
   </style>
 </head>
-<body>
 
+<body>
   <header>
-    <div class="brand">Tap Tap</div>
+    <div class="brand">Tap Leaderboard</div>
     <nav>
       <a href="index.html">Home</a>
       <a href="leaderboard.html">Leaderboard</a>
       <span class="pill" id="navUser"></span>
       <a href="auth.html" id="authLink">Login / Sign up</a>
       <a href="#" id="logoutLink" style="display:none;">Logout</a>
+
+      <div class="themeToggle" title="Toggle theme">
+        <span>🌙</span>
+        <div class="switch" id="themeSwitch" role="button" tabindex="0" aria-label="Toggle dark mode">
+          <div class="knob"></div>
+        </div>
+        <span>☀️</span>
+      </div>
     </nav>
   </header>
 
   <div class="warning" id="warning">DUCKS INVADING!!</div>
   <div class="duckInstruction" id="instruction">
-    <b>TAP DUCKS TO CLEAR</b><br/>
+    <b>TAP THE DUCK TO LEAVE :(</b><br/>
     (Golden goose: <b>DOUBLE</b>-click) • (Red duck: <b>TRIPLE</b>-click)
   </div>
   <div class="petBadge" id="petBadge">PET ACTIVE: 3:00</div>
@@ -256,7 +356,7 @@
         <div class="count" id="count">0</div>
       </div>
 
-      <div class="hint" id="hint">Log in to start counting.</div>
+      <div class="hint" id="hint">Log in to be counted on the leaderboard.</div>
     </div>
   </main>
 
@@ -266,10 +366,26 @@
     // --------- localStorage ----------
     const LS_USERS = "tap_users";
     const LS_SESSION = "tap_session";
+    const LS_THEME = "tap_theme";
+
     function loadUsers(){ return JSON.parse(localStorage.getItem(LS_USERS) || "{}"); }
     function saveUsers(users){ localStorage.setItem(LS_USERS, JSON.stringify(users)); }
     function getSession(){ return JSON.parse(localStorage.getItem(LS_SESSION) || "null"); }
     function clearSession(){ localStorage.removeItem(LS_SESSION); }
+
+    // --------- Theme ----------
+    const themeSwitch = document.getElementById("themeSwitch");
+    function applyTheme(mode){ document.body.classList.toggle("dark", mode === "dark"); }
+    applyTheme(localStorage.getItem(LS_THEME) || "light");
+    function toggleTheme(){
+      const next = document.body.classList.contains("dark") ? "light" : "dark";
+      localStorage.setItem(LS_THEME, next);
+      applyTheme(next);
+    }
+    themeSwitch.addEventListener("click", (e) => { e.stopPropagation(); toggleTheme(); });
+    themeSwitch.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); toggleTheme(); }
+    });
 
     // --------- Admin ----------
     const ADMIN_USERNAME = "yamoon";
@@ -313,8 +429,9 @@
     const TAP_STEP = 75;
     const DUCKS_PER_INVASION = 3;
 
-    const GOOSE_CHANCE = 0.10;     // 10%
-    const MAD_DUCK_CHANCE = 0.12;  // 12%
+    const GOOSE_CHANCE = 0.10;
+    const MAD_DUCK_CHANCE = 0.12;
+
     function chance(p){ return Math.random() < p; }
 
     // Triple click helper
@@ -375,7 +492,7 @@
       o.onended = () => ctx.close();
     }
 
-    // --------- Goose pet countdown ----------
+    // --------- Golden Goose pet countdown ----------
     let petEndAt = 0;
     let petTimer = null;
 
@@ -401,14 +518,14 @@
       }, 250);
     }
 
-    // --------- Golden Goose ----------
+    // --------- Golden Goose (DOUBLE click) ----------
+    // Changed: +2 taps per 1s (instead of +3 per 3s)
     function spawnGoldenGoose(){
       const goose = document.createElement("div");
       goose.className = "duck goose golden roaming";
       goose.innerHTML = `<span class="body">🪿</span>`;
       duckLayer.appendChild(goose);
 
-      // Place near counter, then roam
       const rect = countWrap.getBoundingClientRect();
       const mainRect = tapArea.getBoundingClientRect();
       goose.style.left = (rect.left - mainRect.left + 160) + "px";
@@ -417,7 +534,6 @@
       let petInterval = null;
       let petTimeout = null;
 
-      // ✅ DOUBLE CLICK to pet (unchanged)
       goose.ondblclick = (e) => {
         e.stopPropagation();
         if (goose.classList.contains("pet")) return;
@@ -425,10 +541,8 @@
         goose.classList.remove("roaming");
         goose.classList.add("pet");
 
-        // ✅ YOUR CHANGE: +2 every 1 second
-        showToast("Golden goose is your pet 🪿✨ (+2 / 1s)");
+        showToast("Golden goose pet 🪿✨ (+2 / 1s)");
 
-        // 3 minutes
         petEndAt = Date.now() + 180000;
         petBadge.textContent = "PET ACTIVE: 3:00";
         startPetCountdown();
@@ -437,12 +551,11 @@
           const sess = getSession();
           const users = loadUsers();
           if (!sess || !users[sess.username]) return;
-
-          users[sess.username].taps = (users[sess.username].taps || 0) + 2; // ✅ +2
+          users[sess.username].taps = (users[sess.username].taps || 0) + 2;
           saveUsers(users);
           countEl.textContent = String(users[sess.username].taps);
           refresh();
-        }, 1000); // ✅ every 1 second
+        }, 1000);
 
         petTimeout = setTimeout(() => {
           if (petInterval) clearInterval(petInterval);
@@ -497,7 +610,6 @@
         }, 1700);
       }, 1800);
 
-      // TRIPLE click to remove
       duck.addEventListener("pointerdown", makeTripleClickHandler(() => {
         createSadSound();
         duck.classList.add("leaving");
@@ -572,6 +684,170 @@
       refresh();
     }
 
+    // --------- CANADA GOOSE BOSS (1500 taps) ----------
+    const BOSS_SPAWN_TAPS = 1500;
+    const BOSS_MAX_HP = 900;
+    const PLAYER_DMG = 7;
+    const MINI_DUCK_DPS = 26;
+    const BOSS_BITE_DAMAGE = 500;
+    const BOSS_BITE_INTERVAL = 2300;
+    const BOSS_VULN_WINDOW = 950;
+
+    let boss = null;
+    let bossHp = BOSS_MAX_HP;
+    let bossPhase = 0; // 0 none, 1 invincible intro, 2 fight, 3 dead
+    let bossSpawned = false;
+
+    let bossBiteTimer = null;
+    let bossMiniTimer = null;
+    let bossVulnerableUntil = 0;
+
+    function updateBossUI(){
+      if (!boss) return;
+      const fill = boss.querySelector(".bossFill");
+      const label = boss.querySelector(".bossLabel");
+      const pct = Math.max(0, Math.min(100, (bossHp / BOSS_MAX_HP) * 100));
+      fill.style.width = pct + "%";
+
+      if (bossPhase === 1){
+        label.textContent = "CANADA GOOSE BOSS (INVINCIBLE)";
+      } else if (bossPhase === 2){
+        label.textContent = "DISTRACTED WHEN BITING — CLICK TO HELP";
+      } else {
+        label.textContent = "GOOSE DOWN";
+      }
+    }
+
+    function damageBoss(amount){
+      if (!boss || bossPhase !== 2) return;
+      bossHp -= amount;
+      if (bossHp < 0) bossHp = 0;
+      updateBossUI();
+      if (bossHp === 0) killBoss();
+    }
+
+    function killBoss(){
+      if (!boss) return;
+      bossPhase = 3;
+
+      if (bossBiteTimer) clearInterval(bossBiteTimer);
+      bossBiteTimer = null;
+
+      if (bossMiniTimer) clearInterval(bossMiniTimer);
+      bossMiniTimer = null;
+
+      showToast("🪿 Boss defeated!");
+      boss.classList.add("leaving");
+
+      setTimeout(() => {
+        if (boss) boss.remove();
+        boss = null;
+
+        // clear critters + unlock
+        critters.forEach(d => d.remove());
+        critters = [];
+        lockAfterArrival = false;
+        setBlocked(false);
+        refresh();
+      }, 900);
+    }
+
+    function startBossFightLoop(){
+      if (!boss) return;
+
+      bossBiteTimer = setInterval(() => {
+        const sess = getSession();
+        const users = loadUsers();
+        if (!sess || !users[sess.username]) return;
+
+        // peck animation
+        const img = boss.querySelector(".bossBody");
+        img.classList.remove("peck");
+        void img.offsetWidth;
+        img.classList.add("peck");
+
+        bossVulnerableUntil = Date.now() + BOSS_VULN_WINDOW;
+
+        users[sess.username].taps = (users[sess.username].taps || 0) - BOSS_BITE_DAMAGE;
+        if (users[sess.username].taps < 0) users[sess.username].taps = 0;
+        saveUsers(users);
+        countEl.textContent = String(users[sess.username].taps);
+
+        shakeScore();
+        showToast(`🪿 BITE! -${BOSS_BITE_DAMAGE}`);
+
+        if (bossMiniTimer) clearInterval(bossMiniTimer);
+        bossMiniTimer = setInterval(() => {
+          if (!boss){
+            clearInterval(bossMiniTimer);
+            bossMiniTimer = null;
+            return;
+          }
+          if (Date.now() > bossVulnerableUntil){
+            clearInterval(bossMiniTimer);
+            bossMiniTimer = null;
+            return;
+          }
+          damageBoss(MINI_DUCK_DPS / 10);
+        }, 100);
+
+        refresh();
+      }, BOSS_BITE_INTERVAL);
+    }
+
+    function spawnGooseBoss(){
+      if (bossSpawned || isAdmin()) return;
+      bossSpawned = true;
+
+      // lock game
+      lockAfterArrival = true;
+      setBlocked(true);
+
+      bossPhase = 1;
+      bossHp = BOSS_MAX_HP;
+
+      boss = document.createElement("div");
+      boss.className = "boss";
+      boss.innerHTML = `
+        <div class="bossMask">
+          <img class="bossBody" src="canada-goose.webp" alt="Canada Goose Boss" />
+        </div>
+        <div class="bossBar"><div class="bossFill"></div></div>
+        <div class="bossLabel"></div>
+      `;
+
+      const rect = countWrap.getBoundingClientRect();
+      const mainRect = tapArea.getBoundingClientRect();
+      boss.style.left = (rect.left - mainRect.left + 55) + "px";
+      boss.style.top  = (rect.top  - mainRect.top  - 145) + "px";
+
+      boss.addEventListener("pointerdown", (e) => {
+        e.stopPropagation();
+
+        if (bossPhase === 1){
+          showToast("🪿 Too strong… wait for it to bite!");
+          return;
+        }
+        if (Date.now() <= bossVulnerableUntil){
+          damageBoss(PLAYER_DMG);
+        } else {
+          showToast("Not vulnerable yet!");
+        }
+      });
+
+      countWrap.appendChild(boss);
+      updateBossUI();
+      showToast("🪿 CANADA GOOSE BOSS arrived!");
+
+      setTimeout(() => {
+        if (!boss) return;
+        bossPhase = 2;
+        updateBossUI();
+        showToast("When it bites (-500), click it while distracted!");
+        startBossFightLoop();
+      }, 2000);
+    }
+
     // --------- Auth / profile ----------
     function refresh(){
       const sess = getSession();
@@ -584,15 +860,12 @@
         statusLine.textContent = "Not logged in";
         displayNameEl.textContent = "Guest";
         countEl.textContent = "0";
-        hintEl.textContent = "Log in to start counting.";
+        hintEl.textContent = "Log in to be counted on the leaderboard.";
         return;
       }
 
       const u = users[sess.username];
       const name = u.displayName || sess.username;
-
-      // prevent instant invasion after login if you already have taps
-      lastSpawnCheckpoint = Math.floor((u.taps || 0) / TAP_STEP);
 
       navUser.textContent = isAdmin() ? `Admin: ${name}` : `Hi, ${name}`;
       authLink.style.display = "none";
@@ -601,9 +874,12 @@
       if (isAdmin()){
         statusLine.textContent = "Admin mode (no ducks). Tap freely.";
         hintEl.textContent = "You are immune to invasions.";
+      } else if (bossPhase === 2){
+        statusLine.textContent = "BOSS FIGHT!";
+        hintEl.textContent = "Click the boss only when it bites.";
       } else if (blocked){
         statusLine.textContent = "Ducks are hugging the counter!";
-        hintEl.textContent = "Tap ducks to clear them.";
+        hintEl.textContent = "Background locked. Tap ducks to make them leave :(";
       } else {
         statusLine.textContent = "Tap anywhere!";
         hintEl.textContent = "Tap/click anywhere to add +1";
@@ -620,12 +896,24 @@
       setBlocked(false);
       lockAfterArrival = false;
 
+      // remove critters
       critters.forEach(d => d.remove());
       critters = [];
 
+      // stop pet timer
       if (petTimer) clearInterval(petTimer);
       petTimer = null;
       petBadge.classList.remove("show");
+
+      // boss cleanup
+      if (bossBiteTimer) clearInterval(bossBiteTimer);
+      bossBiteTimer = null;
+      if (bossMiniTimer) clearInterval(bossMiniTimer);
+      bossMiniTimer = null;
+      if (boss) boss.remove();
+      boss = null;
+      bossPhase = 0;
+      bossSpawned = false;
 
       refresh();
       showToast("Logged out");
@@ -643,8 +931,9 @@
         return;
       }
 
-      if (blocked && !isAdmin()){
-        showToast("Tap ducks to clear them.");
+      // if boss fight and locked, let player still click boss (handled by boss itself)
+      if (blocked && !isAdmin() && bossPhase !== 2){
+        showToast("Tap the ducks to make them leave :(");
         return;
       }
 
@@ -652,6 +941,14 @@
       saveUsers(users);
       countEl.textContent = String(users[sess.username].taps);
 
+      // Spawn boss at 1500 taps (priority)
+      if (!bossSpawned && (users[sess.username].taps || 0) >= BOSS_SPAWN_TAPS){
+        spawnGooseBoss();
+        refresh();
+        return;
+      }
+
+      // normal invasions
       const taps = users[sess.username].taps;
       const checkpoint = Math.floor(taps / TAP_STEP);
       if (!isAdmin() && checkpoint > lastSpawnCheckpoint){
@@ -662,9 +959,9 @@
       refresh();
     });
 
+    // Init
     setBlocked(false);
     refresh();
   </script>
-
 </body>
 </html>
