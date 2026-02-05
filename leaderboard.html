@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Leaderboard</title>
+  <style>
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:system-ui, Arial; background:#fafafa; color:#111; }
+    header{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fff; border-bottom:1px solid #eee; }
+    nav a{ text-decoration:none; color:#111; padding:6px 10px; border-radius:10px; }
+    nav a:hover{ background:#f3f3f3; }
+
+    main{ padding:24px; max-width:900px; margin:0 auto; }
+    .card{ background:#fff; border:1px solid #eee; border-radius:16px; padding:18px; box-shadow:0 6px 24px rgba(0,0,0,.05); }
+    h1{ margin:0 0 10px; }
+    table{ width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td{ text-align:left; padding:10px; border-bottom:1px solid #eee; font-size:14px; }
+    th{ font-size:12px; opacity:.75; }
+    .muted{ opacity:.7; font-size:13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="font-weight:900;">Tap Tap</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="auth.html">Login / Sign up</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Leaderboard</h1>
+      <div class="muted">This leaderboard is for this device/browser only (localStorage).</div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player</th>
+            <th>Taps</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const LS_USERS = "tap_users";
+    function loadUsers(){ return JSON.parse(localStorage.getItem(LS_USERS) || "{}"); }
+
+    const users = loadUsers();
+    const list = Object.entries(users).map(([username, u]) => ({
+      username,
+      name: u.displayName || username,
+      taps: Number(u.taps || 0)
+    })).sort((a,b) => b.taps - a.taps);
+
+    const rows = document.getElementById("rows");
+    rows.innerHTML = list.length ? "" : `<tr><td colspan="3">No players yet.</td></tr>`;
+
+    list.forEach((p, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${p.name}</td>
+        <td>${p.taps}</td>
+      `;
+      rows.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
